@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>menny501 MARKET</title>
+<style>
+  :root{
+    --bg:#0a0b0f;
+    --bg2:#11131a;
+    --card:#15171f;
+    --gold:#d4af37;
+    --gold2:#f4d976;
+    --cyan:#22d3ee;
+    --text:#eef0f4;
+    --muted:#8a8f9c;
+    --border:#262a36;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:radial-gradient(circle at 20% 0%, #1a1d28 0%, var(--bg) 55%);
+    color:var(--text);
+    font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+  header{
+    position:sticky; top:0; z-index:50;
+    backdrop-filter:blur(10px);
+    background:rgba(10,11,15,0.85);
+    border-bottom:1px solid var(--border);
+    padding:16px 20px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .logo{
+    font-weight:800; font-size:1.3rem; letter-spacing:0.5px;
+    background:linear-gradient(120deg,var(--gold2),var(--cyan));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .logo span{font-weight:400; color:var(--muted); font-size:0.7rem; display:block; letter-spacing:2px;}
+  .badge{
+    font-size:0.65rem; padding:4px 10px; border-radius:20px;
+    border:1px solid var(--gold); color:var(--gold);
+    text-transform:uppercase; letter-spacing:1px;
+  }
+  .wrap{max-width:1100px; margin:0 auto; padding:20px;}
+
+  .add-btn{
+    width:100%; padding:16px; border-radius:16px;
+    background:linear-gradient(135deg,var(--gold),#a8841f);
+    color:#0a0b0f; font-weight:700; font-size:1rem;
+    border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;
+    box-shadow:0 8px 24px rgba(212,175,55,0.25);
+    transition:transform .15s ease;
+  }
+  .add-btn:active{transform:scale(0.98);}
+
+  .filters{display:flex; gap:10px; margin:18px 0; overflow-x:auto; padding-bottom:4px;}
+  .filters button{
+    white-space:nowrap; padding:8px 16px; border-radius:20px; border:1px solid var(--border);
+    background:var(--card); color:var(--muted); font-size:0.85rem; cursor:pointer;
+  }
+  .filters button.active{
+    border-color:var(--cyan); color:var(--cyan); background:rgba(34,211,238,0.08);
+  }
+
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:16px; margin-top:18px;
+  }
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:18px; overflow:hidden;
+    display:flex; flex-direction:column; position:relative;
+    transition:border-color .2s ease, transform .2s ease;
+  }
+  .card:hover{border-color:var(--gold); transform:translateY(-2px);}
+  .card img{width:100%; aspect-ratio:1/1; object-fit:cover; background:#0d0f15;}
+  .card .body{padding:12px 14px 14px;}
+  .card h3{font-size:0.95rem; font-weight:600; margin-bottom:4px;}
+  .card .price{
+    color:var(--gold2); font-weight:700; font-size:1.1rem; margin:4px 0 8px;
+  }
+  .card .desc{color:var(--muted); font-size:0.78rem; line-height:1.4; margin-bottom:10px; min-height:32px;}
+  .live-dot{
+    position:absolute; top:10px; left:10px; display:flex; align-items:center; gap:5px;
+    background:rgba(0,0,0,0.55); padding:3px 9px; border-radius:20px; font-size:0.65rem; color:#4ade80;
+  }
+  .live-dot::before{
+    content:''; width:6px; height:6px; border-radius:50%; background:#4ade80;
+    animation:pulse 1.4s infinite;
+  }
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,0.6);}70%{box-shadow:0 0 0 6px rgba(74,222,128,0);}100%{box-shadow:0 0 0 0 rgba(74,222,128,0);}}
+  .cat-tag{
+    position:absolute; top:10px; right:10px; background:rgba(212,175,55,0.15);
+    border:1px solid var(--gold); color:var(--gold2); font-size:0.65rem; padding:3px 9px; border-radius:20px;
+  }
+
+  .share-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .share-btn{
+    flex:1; min-width:42px; height:38px; border-radius:10px; border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:1.1rem; color:#fff;
+    transition:opacity .15s;
+  }
+  .share-btn:active{opacity:0.7;}
+  .wa{background:#25D366;} .fb{background:#1877F2;} .tg{background:#229ED9;} .tw{background:#000;}
+  .del-btn{
+    margin-top:8px; width:100%; background:transparent; border:1px solid #3a2020; color:#e06464;
+    padding:6px; border-radius:8px; font-size:0.75rem; cursor:pointer;
+  }
+
+  .empty{
+    text-align:center; padding:60px 20px; color:var(--muted);
+  }
+
+  /* Modal */
+  .overlay{
+    position:fixed; inset:0; background:rgba(5,6,9,0.85); backdrop-filter:blur(4px);
+    display:none; align-items:flex-end; justify-content:center; z-index:100;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--bg2); width:100%; max-width:520px; border-radius:24px 24px 0 0;
+    border:1px solid var(--border); border-bottom:none; padding:22px; max-height:92vh; overflow-y:auto;
+    animation:slideUp .25s ease;
+  }
+  @keyframes slideUp{from{transform:translateY(40px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+  .modal h2{
+    background:linear-gradient(120deg,var(--gold2),var(--cyan)); -webkit-background-clip:text; background-clip:text; color:transparent;
+    margin-bottom:16px; font-size:1.2rem;
+  }
+  .photo-zone{
+    width:100%; aspect-ratio:4/3; border:2px dashed var(--border); border-radius:16px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    color:var(--muted); cursor:pointer; overflow:hidden; position:relative; margin-bottom:16px;
+    background:#0d0f15;
+  }
+  .photo-zone img{width:100%; height:100%; object-fit:cover; position:absolute; inset:0;}
+  .photo-zone .icon{font-size:2rem;}
+  .photo-actions{display:flex; gap:10px; margin-bottom:16px;}
+  .photo-actions label{
+    flex:1; text-align:center; padding:10px; border-radius:12px; border:1px solid var(--border);
+    color:var(--cyan); font-size:0.85rem; cursor:pointer; background:rgba(34,211,238,0.06);
+  }
+  input[type=file]{display:none;}
+  .field{margin-bottom:14px;}
+  .field label{font-size:0.78rem; color:var(--muted); display:block; margin-bottom:6px;}
+  .field input, .field textarea, .field select{
+    width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--border);
+    background:#0d0f15; color:var(--text); font-size:0.9rem; outline:none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus{border-color:var(--gold);}
+  .field textarea{resize:vertical; min-height:70px;}
+  .modal-actions{display:flex; gap:10px; margin-top:6px;}
+  .modal-actions button{
+    flex:1; padding:14px; border-radius:14px; border:none; font-weight:700; cursor:pointer; font-size:0.9rem;
+  }
+  .cancel-btn{background:transparent; border:1px solid var(--border); color:var(--muted);}
+  .publish-btn{background:linear-gradient(135deg,var(--cyan),#0e9bc4); color:#03161c;}
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--card); border:1px solid var(--gold); color:var(--gold2);
+    padding:12px 22px; border-radius:30px; font-size:0.85rem; z-index:200; opacity:0; pointer-events:none;
+    transition:opacity .3s ease, transform .3s ease;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-6px);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">menny501<span>MARKET • LIVE</span></div>
+  <div class="badge">PRO</div>
+</header>
+
+<div class="wrap">
+  <button class="add-btn" onclick="openModal()">📷 Vendre un objet</button>
+
+  <div class="filters" id="filters"></div>
+
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty" style="display:none;">Aucune annonce pour l'instant. Soyez le premier à publier !</div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>Nouvel article à vendre</h2>
+
+    <div class="photo-zone" id="photoZone" onclick="document.getElementById('fileInputGallery').click()">
+      <div class="icon">📷</div>
+      <div>Touchez pour ajouter une photo</div>
+    </div>
+    <div class="photo-actions">
+      <label>📸 Prendre une photo
+        <input type="file" accept="image/*" capture="environment" id="fileInputCamera" onchange="handlePhoto(event)">
+      </label>
+      <label>🖼️ Galerie
+        <input type="file" accept="image/*" id="fileInputGallery" onchange="handlePhoto(event)">
+      </label>
+    </div>
+
+    <div class="field">
+      <label>Titre de l'objet</label>
+      <input type="text" id="fTitle" placeholder="Ex: iPhone 13 Pro, montre, vélo...">
+    </div>
+    <div class="field">
+      <label>Description</label>
+      <textarea id="fDesc" placeholder="État, détails, raison de la vente..."></textarea>
+    </div>
+    <div class="field">
+      <label>Prix (DA)</label>
+      <input type="number" id="fPrice" placeholder="Ex: 25000">
+    </div>
+    <div class="field">
+      <label>Catégorie</label>
+      <select id="fCat">
+        <option>Électronique</option>
+        <option>Mode</option>
+        <option>Maison</option>
+        <option>Véhicules</option>
+        <option>Sport</option>
+        <option>Autre</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="cancel-btn" onclick="closeModal()">Annuler</button>
+      <button class="publish-btn" onclick="publish()">Publier en ligne</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let listings = [];
+let currentPhoto = null;
+let activeFilter = "Tous";
+const CATS = ["Tous","Électronique","Mode","Maison","Véhicules","Sport","Autre"];
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function openModal(){
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('fTitle').value='';
+  document.getElementById('fDesc').value='';
+  document.getElementById('fPrice').value='';
+  currentPhoto = null;
+  document.getElementById('photoZone').innerHTML = '<div class="icon">📷</div><div>Touchez pour ajouter une photo</div>';
+}
+
+function handlePhoto(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    currentPhoto = ev.target.result;
+    document.getElementById('photoZone').innerHTML = '<img src="'+currentPhoto+'">';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function loadListings(){
+  try{
+    const res = await window.storage.get('menny501-listings');
+    listings = res ? JSON.parse(res.value) : [];
+  }catch(e){
+    listings = [];
+  }
+  renderFilters();
+  render();
+}
+
+async function saveListings(){
+  try{
+    await window.storage.set('menny501-listings', JSON.stringify(listings));
+  }catch(e){
+    console.error('Erreur sauvegarde', e);
+  }
+}
+
+function publish(){
+  const title = document.getElementById('fTitle').value.trim();
+  const desc = document.getElementById('fDesc').value.trim();
+  const price = document.getElementById('fPrice').value.trim();
+  const cat = document.getElementById('fCat').value;
+
+  if(!title || !price){
+    showToast('⚠️ Titre et prix obligatoires');
+    return;
+  }
+  if(!currentPhoto){
+    showToast('⚠️ Ajoutez une photo de l\'objet');
+    return;
+  }
+
+  const item = {
+    id: 'item_' + Date.now(),
+    title, desc, price, cat,
+    photo: currentPhoto,
+    date: new Date().toISOString()
+  };
+  listings.unshift(item);
+  saveListings();
+  renderFilters();
+  render();
+  closeModal();
+  showToast('✅ Publié en temps réel !');
+}
+
+function deleteItem(id){
+  listings = listings.filter(i => i.id !== id);
+  saveListings();
+  renderFilters();
+  render();
+}
+
+function renderFilters(){
+  const box = document.getElementById('filters');
+  box.innerHTML = '';
+  CATS.forEach(c=>{
+    const b = document.createElement('button');
+    b.textContent = c;
+    if(c === activeFilter) b.classList.add('active');
+    b.onclick = ()=>{ activeFilter = c; renderFilters(); render(); };
+    box.appendChild(b);
+  });
+}
+
+function timeAgo(dateStr){
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime())/1000);
+  if(diff < 60) return 'à l\'instant';
+  if(diff < 3600) return Math.floor(diff/60)+' min';
+  if(diff < 86400) return Math.floor(diff/3600)+' h';
+  return Math.floor(diff/86400)+' j';
+}
+
+function render(){
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  const filtered = activeFilter === 'Tous' ? listings : listings.filter(i=>i.cat===activeFilter);
+
+  if(filtered.length === 0){
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  grid.innerHTML = filtered.map(item=>{
+    const shareText = encodeURIComponent('🛍️ ' + item.title + ' — ' + item.price + ' DA via menny501 MARKET');
+    const pageUrl = encodeURIComponent(window.location.href + '#' + item.id);
+    return `
+    <div class="card">
+      <div class="live-dot">LIVE</div>
+      <div class="cat-tag">${item.cat}</div>
+      <img src="${item.photo}" alt="${item.title}">
+      <div class="body">
+        <h3>${item.title}</h3>
+        <div class="price">${Number(item.price).toLocaleString('fr-FR')} DA</div>
+        <div class="desc">${item.desc || 'Aucune description.'}</div>
+        <div class="share-row">
+          <button class="share-btn wa" title="WhatsApp" onclick="window.open('https://wa.me/?text=${shareText}%20${pageUrl}','_blank')">🟢</button>
+          <button class="share-btn fb" title="Facebook" onclick="window.open('https://www.facebook.com/sharer/sharer.php?u=${pageUrl}&quote=${shareText}','_blank')">📘</button>
+          <button class="share-btn tg" title="Telegram" onclick="window.open('https://t.me/share/url?url=${pageUrl}&text=${shareText}','_blank')">✈️</button>
+          <button class="share-btn tw" title="X / Twitter" onclick="window.open('https://twitter.com/intent/tweet?text=${shareText}&url=${pageUrl}','_blank')">✖️</button>
+        </div>
+        <button class="del-btn" onclick="deleteItem('${item.id}')">Retirer l'annonce • ${timeAgo(item.date)}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+loadListings();
+</script>
+
+</body>
+</html>
